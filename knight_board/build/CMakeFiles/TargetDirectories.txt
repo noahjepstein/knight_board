@@ -1,0 +1,3 @@
+/Users/noahepstein/GD/101_selfteaching/interview_practice/knight_board/knight_board/build/CMakeFiles/rebuild_cache.dir
+/Users/noahepstein/GD/101_selfteaching/interview_practice/knight_board/knight_board/build/CMakeFiles/edit_cache.dir
+/Users/noahepstein/GD/101_selfteaching/interview_practice/knight_board/knight_board/build/CMakeFiles/knight_board.dir

@@ -1,15 +1,23 @@
 #include "board.h"
+#include <iostream>
+
+using namespace std;
 
 Board::Board(unsigned x, unsigned y) {
     x_dim = x;
     y_dim = y;
 }
 
-void readInput() {
+Board::~Board() {
+
+}
+
+void Board::readInput() {
     char node;
-    for (int i = 0; i < y_dim; ++i) {
-        for (int j = 0; j < x_dim) {
+    for (unsigned i = 0; i < y_dim; ++i) {
+        for (unsigned j = 0; j < x_dim; ++j) {
             cin >> node;
+
             switch (node){
                 case '.' :
                     // add plain node
@@ -29,7 +37,7 @@ void readInput() {
                 case 'L' :
                     // add lava node, counts as five moves
                     break;
-                case default:
+                default:
                     exit(1);
             }
         }
@@ -41,16 +49,20 @@ void Board::buildAdjacencyMatrix() {
 }
 
 bool Board::validateMoveSeq(vector<Move> moveSeq) {
-    return True;
+    Move m;
+    moveSeq.push_back(m);
+    return true;
 }
 
 
 vector<Move> Board::generateMoveSeq(Move start_end_positions) {
-    vector<Move> seq (start_end_positions);
+    vector<Move> seq;
+    seq.push_back(start_end_positions);
     return seq;
 }
 
 vector<Move> Board::generateOptimalMoveSeq(Move start_end_positions) {
-    vector<Move> seq (start_end_positions);
+    vector<Move> seq;
+    seq.push_back(start_end_positions);
     return seq;
 }

@@ -1,7 +1,13 @@
 #ifndef BOARD_H
 #define BOARD_H
 
+#include <vector>
+
 using namespace std;
+
+enum NODETYPES {
+    PLAIN, WATER, ROCK, BARRIER, LAVA, TELEPORT
+};
 
 struct Move {
     unsigned x1, y1, x2, y2;
@@ -22,6 +28,7 @@ class Board {
 
 public:
     Board        (unsigned x_dim, unsigned y_dim);
+    ~Board       ();
     void         readInput();
     void         buildAdjacencyMatrix();
     bool         validateMoveSeq(std::vector<Move> moveSeq);
