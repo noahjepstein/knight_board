@@ -1,9 +1,19 @@
 #include "board.h"
 
+/* EQALITY OVERLOADING FOR NODE, MOVE OBJECTS */
+
 bool operator==(const Node& lhs, const Node& rhs)
 {
     return lhs.id == rhs.id;
 }
+
+bool operator==(const Move& m1, const Move& m2) {
+
+    return (((m1.x1 == m2.x1) && (m1.x2 == m2.x2) && (m1.y1 == m2.y1) && (m1.y2 == m2.y2)) ||
+            ((m1.x1 == m2.x2) && (m1.x2 == m2.x1) && (m1.y1 == m2.y2) && (m1.y2 == m2.y1)));
+}
+
+/* BOARD MEMBERS */
 
 Board::Board(int x, int y) {
     x_dim = x;
@@ -11,10 +21,61 @@ Board::Board(int x, int y) {
     n_nodes = x * y;
     Node placeholder_node;
     nodes.resize(n_nodes, placeholder_node);
+    knight_pos.x = 0;
+    knight_pos.y = 0;
 }
 
 Board::~Board() {
 
+}
+
+void Board::printBoard() {
+    cout << "\033[2J\033[1;1H";
+    cout << "BOARD DIMENSIONS -- X: " << x_dim << " Y: " << y_dim << endl;
+    cout << "KNIGHT POSITION  -- X: " << knight_pos.x << " Y: " << knight_pos.y << endl;
+    for (int i = 0; i < y_dim; ++i) {
+        for (int j = 0; j < x_dim; ++j) {
+            if ((j == knight_pos.x) && (i == knight_pos.y)) {
+                cout << " K ";
+            } else {
+                switch (nodes[c2ID(j, i)].type){
+                    case PLAIN :
+                        cout << " . ";
+                        break;
+
+                    case WATER :
+                        cout << " W ";
+                        break;
+
+                    case BARRIER :
+                        cout << " B ";
+                        break;
+
+                    case ROCK :
+                        cout << " R ";
+                        break;
+
+                    case TELEPORT :
+                        cout << " T ";
+                        break;
+
+                    case LAVA :
+                        cout << " L ";
+                        break;
+
+                    default:
+                        exit(1);
+                }
+            }
+        }
+        cout << endl;
+    }
+}
+
+Move Board::makeMove(Node n1, Node n2) {
+    Move m;
+    m = {n1.x, n1.y, n2.x, n2.y};
+    return m;
 }
 
 void Board::readInput() {
@@ -83,21 +144,19 @@ bool Board::onBoard(int x1, int y1){
     return ((x1 >= 0) && (x1 < x_dim) && (y1 >= 0) && (y1 < y_dim));
 }
 
-bool Board::areNeighbors(int nid1, int nid2) {
-    Node n1, n2;
+bool Board::areNeighbors(NodeID nid1, NodeID nid2) {
     if ((nid1 >= 0) && (nid1 < n_nodes) && (nid2 >= 0) && (nid2 < n_nodes)) {
-        n1 = nodes[nid1];
-        n2 = nodes[nid2];
-        auto neigh = find(begin(n1.neighbors), end(n1.neighbors), n2);
+        Node n1 = nodes[nid1];
+        auto neigh = find(begin(n1.neighbors), end(n1.neighbors), nid2);
         return (neigh != end(n1.neighbors));
     } else {
         return false;
     }
 }
 
-void Board::makeNeighbors(Node n1, Node n2) {
-    n1.neighbors.push_back(n2);
-    n2.neighbors.push_back(n1);
+void Board::makeNeighbors(NodeID nid1, NodeID nid2) {
+    nodes[nid1].neighbors.push_back(nid2);
+    nodes[nid2].neighbors.push_back(nid1);
 }
 
 bool Board::validKnightMovePattern(Move m) {
@@ -116,19 +175,13 @@ int Board::c2ID(int x, int y) {
     return y * x_dim + x;
 }
 
-bool Board::moveEquality(Move m1, Move m2) {
-
-    return (((m1.x1 == m2.x1) && (m1.x2 == m2.x2) && (m1.y1 == m2.y1) && (m1.y2 == m2.y2)) ||
-            ((m1.x1 == m2.x2) && (m1.x2 == m2.x1) && (m1.y1 == m2.y2) && (m1.y2 == m2.y1)));
-}
-
 bool Board::validMove(int x1, int y1, int x2, int y2) {
 
     Move m;
     m.x1 = x1;
     m.y1 = y1;
     m.x2 = x2;
-    m.y1 = y2;
+    m.y2 = y2;
     Node n1, n2;
 
     if ((onBoard(x1, y1)) && (onBoard(x2, y2))) {
@@ -140,8 +193,29 @@ bool Board::validMove(int x1, int y1, int x2, int y2) {
                    && (n2.type != ROCK)
                    && validKnightMovePattern(m)
                    && !crossesBarriers(m))
-                   || moveEquality(m, tele)) {
-            makeNeighbors(n1, n2);
+                   || (m == tele)) {
+            makeNeighbors(n1.id, n2.id);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Board::validMove(Move m) {
+
+    Node n1, n2;
+
+    if ((onBoard(m.x1, m.y1)) && (onBoard(m.x2, m.y2))) {
+        n1 = nodes[c2ID(m.x1, m.y1)];
+        n2 = nodes[c2ID(m.x2, m.y2)];
+        if (areNeighbors(c2ID(m.x1, m.y1), c2ID(m.x2, m.y2))) {
+            return true;
+        } else if   (((n1.type != ROCK)
+                   && (n2.type != ROCK)
+                   && validKnightMovePattern(m)
+                   && !crossesBarriers(m))
+                   || (m == tele)) {
+            makeNeighbors(n1.id, n2.id);
             return true;
         }
     }
@@ -181,21 +255,94 @@ void Board::findNeighbors() {
 }
 
 bool Board::validateMoveSeq(vector<Move> moveSeq) {
-    Move m;
-    moveSeq.push_back(m);
+
+    if (moveSeq.empty()) {
+        cout << "EMPTY SEQ?" << endl;
+        return true;
+    } else {
+
+        Move prev_move = moveSeq[0];
+
+        if (!validMove(prev_move)) {
+            return false;
+        }
+
+        for (auto move_p = moveSeq.begin() + 1; move_p != moveSeq.end(); ++move_p) {
+            knight_pos.x = prev_move.x1;
+            knight_pos.y = prev_move.y1;
+            if (!validMove(*move_p) || (move_p->x1 != prev_move.x2) || (move_p->y1 != prev_move.y2)) {
+                return false;
+            }
+            prev_move = *move_p;
+            printBoard();
+        }
+    }
     return true;
 }
 
 
-vector<Move> Board::generateMoveSeq(Move start_end_positions) {
+vector<Move> Board::DFSgenerateMoveSeq(Move start_end_positions) {
+
     vector<Move> seq;
-    seq.push_back(start_end_positions);
+    Node next;
+    NodeID start_nid = c2ID(start_end_positions.x1, start_end_positions.y1);
+    NodeID end_nid   = c2ID(start_end_positions.x2, start_end_positions.y2);
+    Node start = nodes[start_nid];
+    Node end   = nodes[end_nid];
+    nodes[start_nid].marked = true;
+
+    for (auto nextID_p = start.neighbors.begin(); nextID_p!= start.neighbors.end(); ++nextID_p) {
+        next = nodes[*nextID_p];
+        usleep(10000);
+
+        if (!next.marked) {
+            knight_pos.x = next.x;
+            knight_pos.y = next.y;
+            printBoard();
+
+            if (next == end) {
+                seq.push_back(makeMove(start, end));
+                cout << "OMG WE FOUND IT" << endl;
+                return seq;
+            } else {
+                seq = DFSgenerateMoveSeq(makeMove(next, end));
+                if (seq.empty()) {
+                    continue;
+                } else {
+                    seq.insert(seq.begin(), makeMove(start, next));
+                    return seq;
+                }
+            }
+        }
+    }
+    return seq;
+}
+
+vector<Move> Board::generateMoveSeq(Move start_end_positions) {
+    vector<Move> seq = DFSgenerateMoveSeq(start_end_positions);
+    if (seq.empty()) {
+        cout << "NO POSSIBLE MOVE SEQUENCE TO ARRIVE AT (" << start_end_positions.x2
+             << ", " << start_end_positions.y2 << ")" << endl;
+    }
+    return seq;
+}
+
+vector<Move> Board::DijkstraGenerateMoveSeq(Move start_end_positions) {
+
+    vector<Move> seq = DijkstraGenerateMoveSeq(start_end_positions);
+    if (seq.empty()) {
+        cout << "NO POSSIBLE MOVE SEQUENCE TO ARRIVE AT (" << start_end_positions.x2
+             << ", " << start_end_positions.y2 << ")" << endl;
+    }
     return seq;
 }
 
 vector<Move> Board::generateOptimalMoveSeq(Move start_end_positions) {
-    vector<Move> seq;
-    seq.push_back(start_end_positions);
+    vector<Move> seq = DijkstraGenerateMoveSeq(start_end_positions);
+    if (seq.empty()) {
+        cout << "NO POSSIBLE MOVE SEQUENCE TO ARRIVE AT (" << start_end_positions.x2
+             << ", " << start_end_positions.y2 << ")" << endl;
+    }
     return seq;
 }
 

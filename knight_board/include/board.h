@@ -17,17 +17,19 @@
 #include <climits>
 #include <cstring>
 #include <cstdlib>
-#include <fstream>
-#include <numeric>
 #include <sstream>
 #include <iostream>
 #include <algorithm>
+
+#include <unistd.h>
 
 using namespace std;
 
 enum Nodetype {
     PLAIN, WATER, ROCK, BARRIER, LAVA, TELEPORT
 };
+
+typedef int NodeID;
 
 struct Coord {
     int x, y;
@@ -42,7 +44,7 @@ struct Node {
     Nodetype type;
     int weight;
     bool marked;
-    vector<Node> neighbors;
+    vector<NodeID> neighbors;
 };
 
 class Board {
@@ -67,12 +69,16 @@ private:
 
     int          c2ID(int x, int y);
     bool         validMove(int x1, int y1, int x2, int y2);
+    bool         validMove(Move m);
+    Move         makeMove(Node n1, Node n2);
     bool         onBoard(int x1, int y1);
     bool         crossesBarriers(Move m);
-    bool         moveEquality(Move m1, Move m2);
-    bool         areNeighbors(int nid1, int nid2);
-    void         makeNeighbors(Node n1, Node n2);
+    bool         areNeighbors(NodeID nid1, NodeID nid2);
+    void         makeNeighbors(NodeID nid1, NodeID nid2);
     bool         validKnightMovePattern(Move m);
+
+    vector<Move> DFSgenerateMoveSeq(Move start_end_positions);
+    vector<Move> DijkstraGenerateMoveSeq(Move start_end_positions);
 
  };
 
