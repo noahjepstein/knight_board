@@ -7,16 +7,6 @@
 #IncludeRegexTransform: 
 
 ../include/board.h
-vector
--
-
-/Users/noahepstein/GD/101_selfteaching/interview_practice/knight_board/knight_board/src/board.cpp
-board.h
-/Users/noahepstein/GD/101_selfteaching/interview_practice/knight_board/knight_board/src/board.h
-iostream
--
-
-/Users/noahepstein/GD/101_selfteaching/interview_practice/knight_board/knight_board/src/main.cpp
 map
 -
 set
@@ -59,6 +49,12 @@ iostream
 -
 algorithm
 -
+
+/Users/noahepstein/GD/101_selfteaching/interview_practice/knight_board/knight_board/src/board.cpp
+board.h
+/Users/noahepstein/GD/101_selfteaching/interview_practice/knight_board/knight_board/src/board.h
+
+/Users/noahepstein/GD/101_selfteaching/interview_practice/knight_board/knight_board/src/main.cpp
 board.h
 /Users/noahepstein/GD/101_selfteaching/interview_practice/knight_board/knight_board/src/board.h
 
