@@ -1,3 +1,11 @@
+/*  board.h
+    Header for board class.
+    Represents the solution for the knight board challenge.
+    Author: Noah J Epstein
+            noahjepstein@gmail.com
+*/
+
+
 #ifndef BOARD_H
 #define BOARD_H
 
@@ -20,8 +28,12 @@
 #include <sstream>
 #include <iostream>
 #include <algorithm>
+#include <unordered_map>
 
 #include <unistd.h>
+
+#define INF 0x3f3f3f3f
+#define SLEEP_INTERVAL 600000
 
 using namespace std;
 
@@ -40,12 +52,13 @@ struct Move {
 };
 
 struct Node {
-    int id, x, y;
+    int id, x, y, weight;
     Nodetype type;
-    int weight;
     bool marked;
     vector<NodeID> neighbors;
 };
+
+typedef pair<int, int> dPair;
 
 class Board {
 
@@ -55,7 +68,7 @@ public:
     void         readInput();
     void         printBoard();
     void         findNeighbors();
-    bool         validateMoveSeq(std::vector<Move> moveSeq);
+    bool         validateMoveSeq(vector<Move> moveSeq);
     vector<Move> generateMoveSeq(Move start_end_positions);
     vector<Move> generateOptimalMoveSeq(Move start_end_positions);
     vector<Move> generateLongestSeq(Move start_end_positions);
@@ -66,19 +79,22 @@ private:
     Coord knight_pos;
     Move tele;
 
-
+    int          signMult(int x);
     int          c2ID(int x, int y);
     bool         validMove(int x1, int y1, int x2, int y2);
     bool         validMove(Move m);
     Move         makeMove(Node n1, Node n2);
+    Move         makeMove(NodeID nid1, NodeID nid2);
     bool         onBoard(int x1, int y1);
     bool         crossesBarriers(Move m);
     bool         areNeighbors(NodeID nid1, NodeID nid2);
     void         makeNeighbors(NodeID nid1, NodeID nid2);
     bool         validKnightMovePattern(Move m);
 
+    vector<Move> backTrackMoveSeq(unordered_map<NodeID, NodeID> &prev, NodeID src, NodeID end);
     vector<Move> DFSgenerateMoveSeq(Move start_end_positions);
-    vector<Move> DijkstraGenerateMoveSeq(Move start_end_positions);
+    vector<Move> DijkstraGenerateShortestMoveSeq(Move start_end_positions);
+    vector<Move> dijkstraGenerateLongestMoveSeq(Move start_end_positions);
 
  };
 

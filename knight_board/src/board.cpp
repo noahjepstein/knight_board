@@ -1,3 +1,10 @@
+/* board.cpp
+   Board class.
+   Represents the solution for the knight board challenge.
+   Author: Noah J Epstein
+           noahjepstein@gmail.com
+*/
+
 #include "board.h"
 
 /* EQALITY OVERLOADING FOR NODE, MOVE OBJECTS */
@@ -15,6 +22,12 @@ bool operator==(const Move& m1, const Move& m2) {
 
 /* BOARD MEMBERS */
 
+/*
+   Board
+   Constructor for board class -- initializes private members.
+   Args:    x and y dimensions of board.
+   Returns: none
+*/
 Board::Board(int x, int y) {
     x_dim = x;
     y_dim = y;
@@ -25,10 +38,23 @@ Board::Board(int x, int y) {
     knight_pos.y = 0;
 }
 
-Board::~Board() {
-
+/*
+   signMult
+   Helper func for calculating knight move positions.
+   Args:    integer x
+   Returns: 1 if pos, -1 if neg
+*/
+int Board::signMult(int x) {
+    return (x >= 0 ? 1 : -1);
 }
 
+
+/*
+   printBoard
+   Prints board and knight position.
+   Args:    none
+   Returns: none
+*/
 void Board::printBoard() {
     cout << "\033[2J\033[1;1H";
     cout << "BOARD DIMENSIONS -- X: " << x_dim << " Y: " << y_dim << endl;
@@ -72,12 +98,35 @@ void Board::printBoard() {
     }
 }
 
+
+/*
+   makeMove
+   Makes a move from two nodes
+   Args:    two nodes
+   Returns: move struct
+*/
 Move Board::makeMove(Node n1, Node n2) {
     Move m;
     m = {n1.x, n1.y, n2.x, n2.y};
     return m;
 }
 
+/*
+   makeMove
+   Makes a move from two node ids
+   Args:    two node ids
+   Returns: move struct
+*/
+Move Board::makeMove(NodeID nid1, NodeID nid2) {
+    return makeMove(nodes[nid1], nodes[nid2]);
+}
+
+/*
+   readInput
+   Reads board from standard input.
+   Args:    none
+   Returns: none
+*/
 void Board::readInput() {
 
     char node;
@@ -140,10 +189,22 @@ void Board::readInput() {
     }
 }
 
+/*
+   onBoard
+   Returns true if a coordinate is on the board
+   Args:    coordinate x and y
+   Returns: true if on board
+*/
 bool Board::onBoard(int x1, int y1){
     return ((x1 >= 0) && (x1 < x_dim) && (y1 >= 0) && (y1 < y_dim));
 }
 
+/*
+   areNeighbors
+   Returns true if the two nodes can be connected by a valid move
+   Args:    node IDS for two nodes
+   Returns: true if can be connected
+*/
 bool Board::areNeighbors(NodeID nid1, NodeID nid2) {
     if ((nid1 >= 0) && (nid1 < n_nodes) && (nid2 >= 0) && (nid2 < n_nodes)) {
         Node n1 = nodes[nid1];
@@ -154,11 +215,23 @@ bool Board::areNeighbors(NodeID nid1, NodeID nid2) {
     }
 }
 
+/*
+   makeNeighbors
+   Adds other node to each nodes adjacency list
+   Args:    node IDS for two nodes
+   Returns: none
+*/
 void Board::makeNeighbors(NodeID nid1, NodeID nid2) {
     nodes[nid1].neighbors.push_back(nid2);
     nodes[nid2].neighbors.push_back(nid1);
 }
 
+/*
+   validKnightMovePattern
+   Returns true if a move is a valid knight move
+   Args:    Move m
+   Returns: true if valid
+*/
 bool Board::validKnightMovePattern(Move m) {
 
     return ((((m.x2 - m.x1) == -1) && ((m.y2 - m.y1) == -2)) ||
@@ -171,10 +244,22 @@ bool Board::validKnightMovePattern(Move m) {
             (((m.x2 - m.x1) ==  2) && ((m.y2 - m.y1) ==  1)));
 }
 
+/*
+   c2id
+   Gives a node id for coordinates of a node
+   Args:    x and y position
+   Returns: node id -- integer
+*/
 int Board::c2ID(int x, int y) {
     return y * x_dim + x;
 }
 
+/*
+   validMove
+   Returns true if a move between two coordinates is valid on our board.
+   Args:    two x and y positions
+   Returns: true if valid
+*/
 bool Board::validMove(int x1, int y1, int x2, int y2) {
 
     Move m;
@@ -191,6 +276,8 @@ bool Board::validMove(int x1, int y1, int x2, int y2) {
             return true;
         } else if   (((n1.type != ROCK)
                    && (n2.type != ROCK)
+                   && (n1.type != BARRIER)
+                   && (n2.type != BARRIER)
                    && validKnightMovePattern(m)
                    && !crossesBarriers(m))
                    || (m == tele)) {
@@ -201,6 +288,13 @@ bool Board::validMove(int x1, int y1, int x2, int y2) {
     return false;
 }
 
+/*
+   validMove
+   Returns true if a move between two coordinates is valid on our board.
+   Overloaded from previous definition to accept a move
+   Args:    move m
+   Returns: true if valid
+*/
 bool Board::validMove(Move m) {
 
     Node n1, n2;
@@ -212,6 +306,8 @@ bool Board::validMove(Move m) {
             return true;
         } else if   (((n1.type != ROCK)
                    && (n2.type != ROCK)
+                   && (n1.type != BARRIER)
+                   && (n2.type != BARRIER)
                    && validKnightMovePattern(m)
                    && !crossesBarriers(m))
                    || (m == tele)) {
@@ -222,11 +318,41 @@ bool Board::validMove(Move m) {
     return false;
 }
 
+/*
+   crossesBarriers
+   Returns true if a move crosses a barrier (which makes it invalid)
+   Args:    Move m
+   Returns: true if crosses a barrier
+*/
 bool Board::crossesBarriers(Move m) {
-    m.x1 = 0;
+
+    Node n1 = nodes[c2ID(m.x1, m.y1)];
+    Node n2 = nodes[c2ID(m.x2, m.y2)];
+    int dx = m.x2 - m.x1;
+    int dy = m.y2 - m.y1;
+
+    if (abs(dx) == 2) {
+        return (((nodes[n1.id + signMult(dx) * 1].type == BARRIER)
+              || (nodes[n1.id + signMult(dx) * 2].type == BARRIER))
+           &&   ((nodes[n1.id + signMult(dy) * x_dim].type == BARRIER)
+              || (nodes[n1.id + signMult(dy) * x_dim + signMult(dx)].type == BARRIER)));
+    } else if (abs(dx) == 1) {
+        return (((nodes[n1.id + signMult(dy) * x_dim * 1].type == BARRIER)
+              || (nodes[n1.id + signMult(dy) * x_dim * 2].type == BARRIER))
+           &&   ((nodes[n1.id + signMult(dx)].type == BARRIER)
+              || (nodes[n1.id + signMult(dx) + x_dim * signMult(dy)].type == BARRIER)));
+    }
     return false;
 }
 
+/*
+   findNeighbors
+   Initializes the adjacency list by finding all the neighbors of nodes in advance.
+   This speeds path calculations becuase it doesn't have to calculate if a move
+   is valid for each move check at runtime.
+   Args:    none
+   Returns: none
+*/
 void Board::findNeighbors() {
 /*
     void Board::findNeighbors()
@@ -241,6 +367,7 @@ void Board::findNeighbors() {
     for (int i = 0; i < y_dim; ++i) {
         for (int j = 0; j < x_dim; ++j) {
 
+
             validMove(j, i, j - 1, i - 2);
             validMove(j, i, j + 1, i - 2);
             validMove(j, i, j - 2, i - 1);
@@ -254,10 +381,17 @@ void Board::findNeighbors() {
     validMove(tele.x1, tele.y1, tele.x2, tele.y2);
 }
 
+/*
+   validateMoveSeq
+   Runs validMove for each move in the sequence.
+   Also checks that the moves are contiguous with each other.
+   Prints the board and sleeps on each iteration.
+   Args:    sequence of moves
+   Returns: true if valid sequence
+*/
 bool Board::validateMoveSeq(vector<Move> moveSeq) {
 
     if (moveSeq.empty()) {
-        cout << "EMPTY SEQ?" << endl;
         return true;
     } else {
 
@@ -268,19 +402,30 @@ bool Board::validateMoveSeq(vector<Move> moveSeq) {
         }
 
         for (auto move_p = moveSeq.begin() + 1; move_p != moveSeq.end(); ++move_p) {
-            knight_pos.x = prev_move.x1;
-            knight_pos.y = prev_move.y1;
             if (!validMove(*move_p) || (move_p->x1 != prev_move.x2) || (move_p->y1 != prev_move.y2)) {
                 return false;
             }
             prev_move = *move_p;
+            knight_pos.x = prev_move.x1;
+            knight_pos.y = prev_move.y1;
             printBoard();
+            usleep(SLEEP_INTERVAL);
         }
     }
+
+    knight_pos.x = moveSeq.back().x2;
+    knight_pos.y = moveSeq.back().y2;
+    printBoard();
     return true;
 }
 
 
+/*
+   DFSgenerateMoveSeq
+   Finds a move sequence from a start to end position using DFS.
+   Args:    A move representing start and end positions.
+   Returns: Move sequence from start to end position
+*/
 vector<Move> Board::DFSgenerateMoveSeq(Move start_end_positions) {
 
     vector<Move> seq;
@@ -293,16 +438,13 @@ vector<Move> Board::DFSgenerateMoveSeq(Move start_end_positions) {
 
     for (auto nextID_p = start.neighbors.begin(); nextID_p!= start.neighbors.end(); ++nextID_p) {
         next = nodes[*nextID_p];
-        usleep(10000);
 
         if (!next.marked) {
             knight_pos.x = next.x;
             knight_pos.y = next.y;
-            printBoard();
 
             if (next == end) {
                 seq.push_back(makeMove(start, end));
-                cout << "OMG WE FOUND IT" << endl;
                 return seq;
             } else {
                 seq = DFSgenerateMoveSeq(makeMove(next, end));
@@ -318,6 +460,12 @@ vector<Move> Board::DFSgenerateMoveSeq(Move start_end_positions) {
     return seq;
 }
 
+/*
+   generateMoveSeq
+   Uses DFSgenerateMoveSeq to find a valid move sequence.
+   Args:    A move representing start and end positions.
+   Returns: Move sequence from start to end position
+*/
 vector<Move> Board::generateMoveSeq(Move start_end_positions) {
     vector<Move> seq = DFSgenerateMoveSeq(start_end_positions);
     if (seq.empty()) {
@@ -327,18 +475,84 @@ vector<Move> Board::generateMoveSeq(Move start_end_positions) {
     return seq;
 }
 
-vector<Move> Board::DijkstraGenerateMoveSeq(Move start_end_positions) {
-
-    vector<Move> seq = DijkstraGenerateMoveSeq(start_end_positions);
-    if (seq.empty()) {
-        cout << "NO POSSIBLE MOVE SEQUENCE TO ARRIVE AT (" << start_end_positions.x2
-             << ", " << start_end_positions.y2 << ")" << endl;
+/*
+   backTrackMoveSeq
+   Takes the (node, prev_node) pairs stored from dijstra and works backwards to
+   generate a vector of Moves.
+   Args:    map of nodeIDs with their previous nodes, source and target node ids.
+   Returns: Move sequence from start to end position
+*/
+vector<Move> Board::backTrackMoveSeq(unordered_map<NodeID, NodeID> &prev, NodeID src, NodeID last) {
+    vector<Move> seq, empty;
+    NodeID n = last;
+    unordered_map<NodeID, NodeID>::const_iterator finder;
+    while (n != src) {
+        finder = prev.find(n);
+        if (finder == prev.end()) {
+            return empty;
+        } else {
+            seq.insert(seq.begin(), makeMove(finder->second, finder->first));
+        }
+        n = finder->second; // last thing this loop does is make a move to the source
     }
     return seq;
 }
 
+/*
+   DijkstraGenerateShortestMoveSeq
+   Finds the optimal move sequence from a start to end position using dijkstra.
+   Args:    A move representing start and end positions.
+   Returns: Move sequence from start to end position
+*/
+vector<Move> Board::DijkstraGenerateShortestMoveSeq(Move start_end_positions) {
+    int top;
+    Node node;
+    vector<NodeID> neighbors;
+    unordered_map<NodeID, NodeID> prev;
+    NodeID start_nid = c2ID(start_end_positions.x1, start_end_positions.y1);
+    NodeID end_nid   = c2ID(start_end_positions.x2, start_end_positions.y2);
+    vector<int> dist (n_nodes, INF);
+    priority_queue<dPair, vector<dPair>, greater<dPair> > pq;
+
+    pq.push(make_pair(0, start_nid));
+    dist[start_nid] = 0;
+
+    while (!pq.empty()) {
+        top = pq.top().second;
+        if (top == end_nid) {
+            break;
+        }
+        pq.pop();
+        neighbors = nodes[top].neighbors;
+
+        for (auto it = neighbors.begin(); it != neighbors.end(); ++it) {
+
+            node = nodes[*it];
+
+            if (dist[node.id] > dist[top] + node.weight) {
+                dist[node.id] = dist[top] + node.weight;
+
+                pq.push(make_pair(dist[node.id], node.id));
+                auto pre = prev.find(node.id);
+                if (pre == prev.end()) {
+                    prev.emplace(node.id, top);
+                } else {
+                    pre->second = top;
+                }
+            }
+        }
+    }
+    return backTrackMoveSeq(prev, start_nid, end_nid);
+}
+
+/*
+   generateOptimalMoveSeq
+   Finds the optimal move sequence from a start to end position using dijkstra.
+   Args:    A move representing start and end positions.
+   Returns: Move sequence from start to end position
+*/
 vector<Move> Board::generateOptimalMoveSeq(Move start_end_positions) {
-    vector<Move> seq = DijkstraGenerateMoveSeq(start_end_positions);
+    vector<Move> seq = DijkstraGenerateShortestMoveSeq(start_end_positions);
     if (seq.empty()) {
         cout << "NO POSSIBLE MOVE SEQUENCE TO ARRIVE AT (" << start_end_positions.x2
              << ", " << start_end_positions.y2 << ")" << endl;
@@ -346,8 +560,75 @@ vector<Move> Board::generateOptimalMoveSeq(Move start_end_positions) {
     return seq;
 }
 
+/*
+   dijkstraGenerateLongestMoveSeq
+   Finds the longest move sequence from a start to end position using dijkstra
+   with negative edge weights. Side effect: makes all edge weights negative.
+   Args:    A move representing start and end positions.
+   Returns: Move sequence from start to esnd position
+*/
+vector<Move> Board::dijkstraGenerateLongestMoveSeq(Move start_end_positions) {
+    int top;
+    Node node;
+    vector<NodeID> neighbors;
+    unordered_map<NodeID, NodeID> prev;
+    NodeID start_nid = c2ID(start_end_positions.x1, start_end_positions.y1);
+    NodeID end_nid   = c2ID(start_end_positions.x2, start_end_positions.y2);
+    vector<int> dist (n_nodes, INF);
+    priority_queue<dPair, vector<dPair>, greater<dPair> > pq;
+
+    pq.push(make_pair(0, start_nid));
+    dist[start_nid] = 0;
+
+    for (int i = 0; i < n_nodes; ++i) {
+        nodes[i].weight *= -1;
+    }
+
+    while (!pq.empty()) {
+        top = pq.top().second;
+        if (top == end_nid) {
+            break;
+        }
+        pq.pop();
+        neighbors = nodes[top].neighbors;
+
+        for (auto it = neighbors.begin(); it != neighbors.end(); ++it) {
+            if (nodes[*it].marked) {
+                continue;
+            } else {
+                nodes[*it].marked = true;
+            }
+
+            node = nodes[*it];
+
+            if (dist[node.id] > dist[top] + node.weight) {
+                dist[node.id] = dist[top] + node.weight;
+
+                pq.push(make_pair(dist[node.id], node.id));
+                auto pre = prev.find(node.id);
+                if (pre == prev.end()) {
+                    prev.emplace(node.id, top);
+                } else {
+                    pre->second = top;
+                }
+            }
+        }
+    }
+    return backTrackMoveSeq(prev, start_nid, end_nid);
+}
+
+/*
+   generateLongestSeq
+   Finds the longest move sequence from a start to end position
+   using dijkstraGenerateLongestMoveSeq. 
+   Args:    A move representing start and end positions.
+   Returns: Move sequence from start to end position
+*/
 vector<Move> Board::generateLongestSeq(Move start_end_positions) {
-    vector<Move> seq;
-    seq.push_back(start_end_positions);
+    vector<Move> seq = dijkstraGenerateLongestMoveSeq(start_end_positions);
+    if (seq.empty()) {
+        cout << "NO POSSIBLE MOVE SEQUENCE TO ARRIVE AT (" << start_end_positions.x2
+             << ", " << start_end_positions.y2 << ")" << endl;
+    }
     return seq;
 }
