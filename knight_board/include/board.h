@@ -64,7 +64,6 @@ class Board {
 
 public:
     Board        (int x_dim, int y_dim);
-    ~Board       ();
     void         readInput();
     void         printBoard();
     void         findNeighbors();

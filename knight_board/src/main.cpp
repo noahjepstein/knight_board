@@ -29,16 +29,16 @@ int main() {
     board.findNeighbors();
 
     /* level 2 */
-    vector<Move> mseq = board.generateMoveSeq(m);
-    board.validateMoveSeq(mseq);
+    // vector<Move> ms1 = board.generateMoveSeq(m);
+    // board.validateMoveSeq(ms1);
 
     /* level 3 */
-    vector<Move> mseq = board.generateOptimalMoveSeq(m);
-    board.validateMoveSeq(mseq);
+    vector<Move> ms2 = board.generateOptimalMoveSeq(m);
+    board.validateMoveSeq(ms2);
 
-    /* level 5 */
-    vector<Move> mseq = board.generateLongestSeq(m);
-    board.validateMoveSeq(mseq);
+    // /* level 5 */
+    // vector<Move> ms3 = board.generateLongestSeq(m);
+    // board.validateMoveSeq(ms3);
 
     return 0;
 }

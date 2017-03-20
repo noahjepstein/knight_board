@@ -620,7 +620,7 @@ vector<Move> Board::dijkstraGenerateLongestMoveSeq(Move start_end_positions) {
 /*
    generateLongestSeq
    Finds the longest move sequence from a start to end position
-   using dijkstraGenerateLongestMoveSeq. 
+   using dijkstraGenerateLongestMoveSeq.
    Args:    A move representing start and end positions.
    Returns: Move sequence from start to end position
 */
